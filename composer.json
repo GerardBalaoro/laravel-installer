@@ -1,18 +1,25 @@
 {
-    "name": "laravel/installer",
-    "description": "Laravel application installer.",
-    "keywords": ["laravel"],
+    "name": "gerardbalaoro/laravel-installer",
+    "description": "Alternative Laravel Application Installer",
+    "keywords": ["laravel", "installer"],
     "license": "MIT",
     "authors": [
         {
             "name": "Taylor Otwell",
             "email": "taylorotwell@gmail.com"
+        },
+        {
+            "name": "Gerard Balaoro",
+            "email": "gmbalaoro@outlook.com"
         }
     ],
     "autoload": {
         "psr-4": {
             "Laravel\\Installer\\Console\\": "src/"
         }
+    },
+    "replace": {
+        "laravel/installer": "*"
     },
     "require": {
         "ext-zip": "*",
