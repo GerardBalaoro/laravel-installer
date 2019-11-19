@@ -13,37 +13,44 @@ composer global require gerardbalaoro/laravel-installer dev-master
 
 ### Usage
 
-```
-Description:
-  Create a new Laravel application
+* **`laravel new [options] [--] [<name> [<version>]]`**
+  * Create a new Laravel application
+  ```
+  Arguments:
+    name
+    version               Install specified Laravel version
 
-Usage:
-  new [options] [--] [<name>]
+  Options:
+        --dev             Installs the latest "development" release
+    -f, --force           Forces install even if the directory already exists
+  ```
+* **`laravel cache [options] [--] [<versions>...]`**
+  * Download Laravel packages to cache
+  ```
+  Arguments:
+    versions              Versions to download [default: ["master"]]
 
-Arguments:
-  name
+  Options:
+    -a, --all             Downloads all releases
+        --clean           Cleans cache directory
+  ```
+* **`laravel versions`**
+  * Show available Laravel versions
 
-Options:
-      --dev             Installs the latest "development" release
-  -f, --force           Forces install even if the directory already exists
-      --6.0             Installs the latest "6.0" release
-      --5.8             Installs the latest "5.8" release
-      --5.7             Installs the latest "5.7" release
-      --5.6             Installs the latest "5.6" release
-      --5.5             Installs the latest "5.5" release
-      --5.4             Installs the latest "5.4" release
-  -h, --help            Display this help message
-  -q, --quiet           Do not output any message
-  -V, --version         Display this application version
-      --ansi            Force ANSI output
-      --no-ansi         Disable ANSI output
-  -n, --no-interaction  Do not ask any interactive question
-  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
-```
+#### Example
 
-### Versioning
+To create a new Laravel 5.8 project, run the command:
+  ```bash
+  $ laravel new blog 5.8
+  ```
 
-This package will retain release numbers the [original package](https://github.com/laravel/installer) uses with a `GB` build metadata appended.
+### Caching
+
+This package automatically caches the Laravel package every time the `new` command is executed.
+This is very useful when creating projects while offline.
+
+### Updates
+
 Updates to [`laravel/installer`](https://github.com/laravel/installer) will be merged to this one.
 
 

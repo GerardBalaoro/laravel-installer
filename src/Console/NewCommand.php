@@ -2,12 +2,12 @@
 
 namespace Laravel\Installer\Console;
 
-use FilesystemIterator;
-use GuzzleHttp\Client;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use GuzzleHttp\Exception\ConnectException;
+use Laravel\Installer\Helpers;
+use Laravel\Installer\Package;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -20,14 +20,6 @@ use ZipArchive;
 class NewCommand extends Command
 {
     /**
-     * Available Laravel versions
-     * @var array
-     */
-    protected $versions = [
-        '6.0', '5.8', '5.7', '5.6', '5.5', '5.4'
-    ];
-
-    /**
      * Configure the command options.
      *
      * @return void
@@ -38,12 +30,9 @@ class NewCommand extends Command
             ->setName('new')
             ->setDescription('Create a new Laravel application')
             ->addArgument('name', InputArgument::OPTIONAL)
+            ->addArgument('version', InputArgument::OPTIONAL, 'Install specified Laravel version')
             ->addOption('dev', null, InputOption::VALUE_NONE, 'Installs the latest "development" release')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forces install even if the directory already exists');
-
-        foreach ($this->versions as $version) {
-            $this->addOption($version, null, InputOption::VALUE_NONE, "Installs the latest \"{$version}\" release");
-        }
     }
 
     /**
@@ -68,12 +57,24 @@ class NewCommand extends Command
             $this->verifyApplicationDoesntExist($directory);
         }
 
-        $output->writeln('<info>Crafting Laravel ' . (in_array($version, $this->versions) ? "{$version} " : ''). 'Application...</info>');
+        $output->writeln('<info>Crafting Laravel Application..</info>');
+        $output->writeln("  - Using version <comment>{$version}</comment>", OutputInterface::VERBOSITY_VERBOSE);
+        $zipFile = Helpers::cachePath("laravel-{$version}.zip");
+        
+        try {
+            $output->writeln("  - Downloading package...", OutputInterface::VERBOSITY_VERBOSE);
+            $this->download($zipFile, $version);
+        } catch (ConnectException $err) {
+            $output->writeln("<error>{$err->getMessage()}</error>");
+            if (file_exists($zipFile)) {
+                $output->writeln("<comment>Attempting to use cached package...</comment>");
+            }
+        }
+        
+        $output->writeln("  - Extracting package...", OutputInterface::VERBOSITY_VERBOSE);
+        $this->extract($zipFile, $directory);
 
-        $this->download($zipFile = $this->makeFilename(), $version)
-             ->extract($zipFile, $directory)
-             ->prepareWritableDirectories($directory, $output)
-             ->cleanUp($zipFile);
+        $output->writeln("  - Initializing application...", OutputInterface::VERBOSITY_VERBOSE);
 
         $composer = $this->findComposer();
 
@@ -141,28 +142,7 @@ class NewCommand extends Command
      */
     protected function download($zipFile, $version = 'master')
     {
-        switch ($version) {
-            case 'develop':
-                $url = 'http://cabinet.laravel.com/latest-develop.zip';
-                break;
-            case 'master':
-            default:
-                $url = 'http://cabinet.laravel.com/latest.zip';
-                break;
-        }
-
-        if (in_array($version, $this->versions)) {
-            foreach ($this->getReleases() as $release) {
-                if (fnmatch("v{$version}.?", $release)) {
-                    $url = "https://github.com/laravel/laravel/archive/{$release}.zip";
-                }
-            }
-        }
-
-        $response = (new Client)->get($url);
-
-        file_put_contents($zipFile, $response->getBody());
-
+        Package::download($zipFile, $version);
         return $this;
     }
 
@@ -184,30 +164,18 @@ class NewCommand extends Command
         }
 
         $extractDir = pathinfo($zipFile, PATHINFO_FILENAME);
+        // $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'laravel_' . md5(time().uniqid());
         $archive->extractTo($extractDir);
         $archive->close();
 
         $contents = array_diff(scandir($extractDir, SCANDIR_SORT_DESCENDING), ['..', '.']);
-        if (count($contents) === 1) {
-            $i = array_key_first($contents);
-            if (is_dir("{$extractDir}/{$contents[$i]}") && fnmatch('laravel*', "{$contents[$i]}")) {
-                $this->moveDirectoryRecursive("{$extractDir}/{$contents[$i]}", $directory);
-                $this->deleteDirectoryRecursive($extractDir);
-            }
+        $i = array_key_first($contents);
+        if (count($contents) === 1 && is_dir("{$extractDir}/{$contents[$i]}") && fnmatch('laravel*', "{$contents[$i]}")) {
+                Helpers::moveDirectoryRecursive("{$extractDir}/{$contents[$i]}", $directory);
+                Helpers::deleteDirectoryRecursive($extractDir);
+        } else {
+            rename($extractDir, $directory);
         }
-        return $this;
-    }
-
-    /**
-     * Clean-up the Zip file.
-     *
-     * @param  string  $zipFile
-     * @return $this
-     */
-    protected function cleanUp($zipFile)
-    {
-        @chmod($zipFile, 0777);
-        @unlink($zipFile);
         return $this;
     }
 
@@ -233,49 +201,6 @@ class NewCommand extends Command
     }
 
     /**
-     * Move directory contents to another directory
-     *
-     * @param string $source
-     * @param string $destination
-     * @return void
-     */
-    protected function moveDirectoryRecursive($source, $destination)
-    {
-        $crawler = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
-
-        foreach ($crawler as $path) {
-            if ($path->isFile()) {
-                $newPath = "{$destination}/" . ltrim(substr($path, strlen($source)),"\/");
-                if (!file_exists(dirname($newPath))) {
-                    mkdir(dirname($newPath), 0777, true);
-                }
-                rename($path->__toString(), $newPath);
-            }
-        }
-    }
-
-    /**
-     * Delete a directory and its contents
-     *
-     * @param string $directory
-     * @return void
-     */
-    protected function deleteDirectoryRecursive($directory)
-    {
-        $crawler = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
-
-        foreach ($crawler as $path) {
-            if ($path->isFile()) {
-                unlink($path->__toString());
-            } else {
-                rmdir($path->__toString());
-            }
-        }
-
-        rmdir($directory);
-    }
-
-    /**
      * Get the version that should be downloaded.
      *
      * @param  \Symfony\Component\Console\Input\InputInterface  $input
@@ -287,26 +212,12 @@ class NewCommand extends Command
             return 'develop';
         }
 
-        foreach ($this->versions as $version) {
-            if ($input->getOption($version)) {
-                return $version;
-            }
+        $version = $input->getArgument('version');
+        if (in_array($version, Package::$versions)) {
+            return $version;
         }
 
         return 'master';
-    }
-
-    /**
-     * Get releases from GitHub
-     * @return array
-     */
-    protected function getReleases()
-    {
-        $response = (new Client)->request('GET', 'https://api.github.com/repos/laravel/laravel/releases');
-        $releases = array_map(function ($release) {
-            return $release->name;
-        }, json_decode($response->getBody()));
-        return $releases;
     }
 
     /**
