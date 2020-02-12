@@ -164,7 +164,6 @@ class NewCommand extends Command
         }
 
         $extractDir = pathinfo($zipFile, PATHINFO_FILENAME);
-        // $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'laravel_' . md5(time().uniqid());
         $archive->extractTo($extractDir);
         $archive->close();
 

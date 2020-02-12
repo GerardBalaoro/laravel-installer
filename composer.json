@@ -28,8 +28,7 @@
         "symfony/filesystem": "~3.0|~4.0",
         "symfony/process": "~3.0|~4.0",
         "composer/semver": "^1.5",
-        "symfony/stopwatch": "^4.3",
-        "zendframework/zend-text": "^2.7"
+        "symfony/stopwatch": "^4.3"
     },
     "bin": [
         "laravel"
