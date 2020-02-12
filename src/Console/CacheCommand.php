@@ -2,7 +2,7 @@
 
 namespace Laravel\Installer\Console;
 
-use Laravel\Installer\Helpers;
+use Laravel\Installer\Cache;
 use Laravel\Installer\Package;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -40,8 +40,10 @@ class CacheCommand extends Command
 
         foreach ($versions as $version) {
             $output->writeln('Downloading <info>Laravel Package</info> (<comment>' . (is_numeric($version) ? "v{$version}" : $version) . '</comment>)...');
-            Package::download(Helpers::cachePath("laravel-{$version}.zip"), $version);
+            Package::download(Cache::path("laravel-{$version}.zip"), $version);
         }
+
+        $output->writeln(PHP_EOL . '<info>Finished.</info>');
     }
 
     /**
