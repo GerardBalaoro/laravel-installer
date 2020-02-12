@@ -22,6 +22,7 @@ composer global require gerardbalaoro/laravel-installer dev-master
 
   Options:
         --dev             Installs the latest "development" release
+        --auth            Installs the Laravel authentication scaffolding
     -f, --force           Forces install even if the directory already exists
   ```
 * **`laravel cache [options] [--] [<versions>...]`**
