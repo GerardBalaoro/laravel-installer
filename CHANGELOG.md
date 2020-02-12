@@ -1,6 +1,30 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/installer/compare/v2.2.1...master)
+## [Unreleased](https://github.com/laravel/installer/compare/v3.0.1...master)
+
+
+## [v3.0.1 (2019-11-26)](https://github.com/laravel/installer/compare/v3.0.0...v3.0.1)
+
+### Fixed
+- Fix composer autoloader path ([f3db3f3](https://github.com/laravel/installer/commit/f3db3f306c3c2dbbf4ecce4a5dbefe6c1fd178be))
+
+
+## [v3.0.0 (2019-11-26)](https://github.com/laravel/installer/compare/v2.3.0...v3.0.0)
+
+### Changed
+- Move `laravel` binary to new directory ([c581a78](https://github.com/laravel/installer/commit/c581a784643911b97c3b8a2ec25ac809eadbf9c5))
+- Require PHP 7.2 as the new minimum version ([3ab97f2](https://github.com/laravel/installer/commit/3ab97f2e454d9c95833ccdd141d2fdbcdc8e0066))
+- Allow Symfony 5 ([513a060](https://github.com/laravel/installer/commit/513a060e9877bc8ab222d7ff4a60bc97131a0a0c))
+
+### Removed
+- Remove Symfony 3.x support ([a09d8fe](https://github.com/laravel/installer/commit/a09d8fe2ced9579d4fce445aa1336b0993e3e9d0))
+- Remove `zipper.sh` ([78ef1db](https://github.com/laravel/installer/commit/78ef1dbe9ad2fbe5f16a85917748f89bb372599f))
+
+
+## [v2.3.0 (2019-11-19)](https://github.com/laravel/installer/compare/v2.2.1...v2.3.0)
+
+### Added
+- Add `--auth` flag ([f5ebbff](https://github.com/laravel/installer/commit/f5ebbff32f9ff9c40fdf4c200cb2f396050e3cf3))
 
 
 ## [v2.2.1 (2019-10-29)](https://github.com/laravel/installer/compare/v2.2.0...v2.2.1)

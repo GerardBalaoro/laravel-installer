@@ -3,11 +3,10 @@
 namespace Laravel\Installer\Console;
 
 use GuzzleHttp\Exception\ConnectException;
-use Laravel\Installer\Helpers;
+use Laravel\Installer\Cache;
 use Laravel\Installer\Package;
 use RuntimeException;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -32,6 +31,7 @@ class NewCommand extends Command
             ->addArgument('name', InputArgument::OPTIONAL)
             ->addArgument('version', InputArgument::OPTIONAL, 'Install specified Laravel version')
             ->addOption('dev', null, InputOption::VALUE_NONE, 'Installs the latest "development" release')
+            ->addOption('auth', null, InputOption::VALUE_NONE, 'Installs the Laravel authentication scaffolding')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forces install even if the directory already exists');
     }
 
@@ -40,7 +40,7 @@ class NewCommand extends Command
      *
      * @param  \Symfony\Component\Console\Input\InputInterface  $input
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
-     * @return void
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -59,7 +59,7 @@ class NewCommand extends Command
 
         $output->writeln('<info>Crafting Laravel Application..</info>');
         $output->writeln("  - Using version <comment>{$version}</comment>", OutputInterface::VERBOSITY_VERBOSE);
-        $zipFile = Helpers::cachePath("laravel-{$version}.zip");
+        $zipFile = Cache::path("laravel-{$version}.zip");
         
         try {
             $output->writeln("  - Downloading package...", OutputInterface::VERBOSITY_VERBOSE);
@@ -97,7 +97,7 @@ class NewCommand extends Command
             }, $commands);
         }
 
-        $process = new Process(implode(' && ', $commands), $directory, null, null, null);
+        $process = Process::fromShellCommandline(implode(' && ', $commands), $directory, null, null, null);
 
         if ('\\' !== DIRECTORY_SEPARATOR && file_exists('/dev/tty') && is_readable('/dev/tty')) {
             $process->setTty(true);
@@ -107,7 +107,11 @@ class NewCommand extends Command
             $output->write($line);
         });
 
-        $output->writeln('<comment>Application ready! Build something amazing.</comment>');
+        if ($process->isSuccessful()) {
+            $output->writeln('<comment>Application ready! Build something amazing.</comment>');
+        }
+
+        return 0;
     }
 
     /**
@@ -156,6 +160,7 @@ class NewCommand extends Command
     protected function extract($zipFile, $directory)
     {
         $archive = new ZipArchive;
+        $filesystem = new Filesystem;
 
         $response = $archive->open($zipFile, ZipArchive::CHECKCONS);
 
@@ -170,10 +175,10 @@ class NewCommand extends Command
         $contents = array_diff(scandir($extractDir, SCANDIR_SORT_DESCENDING), ['..', '.']);
         $i = array_key_first($contents);
         if (count($contents) === 1 && is_dir("{$extractDir}/{$contents[$i]}") && fnmatch('laravel*', "{$contents[$i]}")) {
-                Helpers::moveDirectoryRecursive("{$extractDir}/{$contents[$i]}", $directory);
-                Helpers::deleteDirectoryRecursive($extractDir);
+                $filesystem->rename("{$extractDir}/{$contents[$i]}", $directory, true);
+                $filesystem->remove($extractDir);
         } else {
-            rename($extractDir, $directory);
+            $filesystem->rename($extractDir, $directory, true);
         }
         return $this;
     }
@@ -209,6 +214,10 @@ class NewCommand extends Command
     {
         if ($input->getOption('dev')) {
             return 'develop';
+        }
+
+        if ($input->getOption('auth')) {
+            return 'auth';
         }
 
         $version = $input->getArgument('version');

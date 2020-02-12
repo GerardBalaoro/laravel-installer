@@ -14,7 +14,7 @@ class Package
      * @var array
      */
     public static $versions = [
-        'master', 'develop', '6.8', '6.5','6.4','6.2', '6.0', '5.8', '5.7', '5.6', '5.5', '5.4'
+        'master', 'develop', 'auth', '6.8', '6.5','6.4','6.2', '6.0', '5.8', '5.7', '5.6', '5.5', '5.4'
     ];
 
     /**
@@ -35,6 +35,9 @@ class Package
                 break;
             case 'master':
                 $url = 'http://cabinet.laravel.com/latest.zip';
+                break;
+            case 'auth':
+                $url = 'http://cabinet.laravel.com/latest-auth.zip';
                 break;
             default:
                 $releases = self::getReleases();
