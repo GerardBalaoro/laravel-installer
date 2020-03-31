@@ -36,5 +36,6 @@ class CacheClearCommand extends Command
     {
         Cache::clear();
         $output->writeln('<info>Cache cleared!</info>');
+        return 0;
     }
 }

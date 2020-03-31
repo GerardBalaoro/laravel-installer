@@ -44,6 +44,7 @@ class CacheCommand extends Command
         }
 
         $output->writeln(PHP_EOL . '<info>Finished.</info>');
+        return 0;
     }
 
     /**

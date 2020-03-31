@@ -31,7 +31,6 @@ class VersionsCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $formatter = $this->getHelper('formatter');
         $output->writeln('<info>Available Laravel Versions</info>');
         $output->write(' - ');
         foreach (Package::$versions as $i => $v) {
@@ -39,5 +38,6 @@ class VersionsCommand extends Command
             $output->write("<comment>{$v}</comment>");
         }
         $output->writeln('');
+        return 0;
     }
 }

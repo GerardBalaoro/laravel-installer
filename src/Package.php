@@ -14,7 +14,7 @@ class Package
      * @var array
      */
     public static $versions = [
-        'master', 'develop', 'auth', '6.8', '6.5','6.4','6.2', '6.0', '5.8', '5.7', '5.6', '5.5', '5.4'
+        'master', 'develop', 'auth', '7', '6', '5.8', '5.7', '5.6', '5.5',
     ];
 
     /**
@@ -66,7 +66,7 @@ class Package
      * Get releases from GitHub
      * @return array
      */
-    protected static function getReleases()
+    public static function getReleases()
     {
         $response = (new Client)->request('GET', 'https://api.github.com/repos/laravel/laravel/releases');
         $releases = array_map(function ($release) {
